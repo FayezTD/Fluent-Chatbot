@@ -224,6 +224,7 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isListening, message, isLoading]);  // Added isLoading dependency
 
   // Handle manual typing

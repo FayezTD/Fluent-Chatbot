@@ -225,7 +225,7 @@ const ChatPage = () => {
   } = useChat();
  
   const { isAuthenticated, login } = useAuth();
-  const [selectedModel, setSelectedModel] = useState('GPT-4o');
+  const [setSelectedModel] = useState('GPT-4o');
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
  
@@ -238,6 +238,7 @@ const ChatPage = () => {
       }, 100);
       return () => clearTimeout(timeoutId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, isLoading]);
 
   // Prevent automatic scrolling when user has manually scrolled up

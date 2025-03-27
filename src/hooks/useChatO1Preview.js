@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback} from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import ChatServiceO1 from '../services/chatServiceO1';
 import { useAuth } from '../components/auth/AuthProvider';

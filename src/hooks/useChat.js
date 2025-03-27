@@ -45,6 +45,7 @@ export function useChat(selectedModel) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const chatService = new ChatService();
 
   const sendMessage = useCallback(async (content) => {
