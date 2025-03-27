@@ -1,10 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ModelSelector from './ModelSelector';
 
 const ChatInput = ({ onSendMessage, isLoading }) => {
   const [message, setMessage] = useState('');
-  const [isReasonSelected, setIsReasonSelected] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('GPT-4o');
   const textareaRef = useRef(null);
+  const sendButtonRef = useRef(null);
+  const voiceButtonRef = useRef(null);
+  const clearButtonRef = useRef(null);
   const recognitionRef = useRef(null);
 
   // Adjust textarea height based on content
@@ -59,6 +63,11 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
       recognitionRef.current.onend = () => {
         console.log('Speech recognition ended');
         setIsListening(false);
+        
+        // Focus the textarea after recognition ends
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
       };
       
       // Handle errors
@@ -115,30 +124,25 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
         }
       }
       
-      const finalMessage = isReasonSelected
-        ? `${message}\nDiscuss in Details or Show in Tabular form or give reasoning`
-        : message;
-        
-      // Call the passed callback function
-      onSendMessage(finalMessage);
+      // Include the selected model in the message metadata
+      onSendMessage(message, selectedModel);
       
       // Clear the message
       setMessage('');
-      setIsReasonSelected(false);
     }
   };
 
   // Handle clearing the input
   const handleClear = () => {
     setMessage('');
-    setIsReasonSelected(false);
     textareaRef.current.focus();
   };
 
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && document.activeElement === textareaRef.current) {
+  // Handle keyboard navigation
+  const handleKeyDown = (e) => {
+    // ESC key handling
+    if (e.key === 'Escape') {
+      if (document.activeElement === textareaRef.current && message) {
         handleClear();
         if (isListening && recognitionRef.current) {
           try {
@@ -149,13 +153,78 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
           }
         }
       }
-    };
+    }
+    
+    // Right arrow key handling
+    if (e.key === 'ArrowRight') {
+      const activeElement = document.activeElement;
+      
+      if (activeElement === textareaRef.current) {
+        if (message.trim()) {
+          sendButtonRef.current?.focus();
+        } else {
+          voiceButtonRef.current?.focus();
+        }
+        e.preventDefault();
+      } else if (activeElement === voiceButtonRef.current) {
+        if (message.trim()) {
+          sendButtonRef.current?.focus();
+        }
+        e.preventDefault();
+      } else if (activeElement === clearButtonRef.current) {
+        // Focus the first model selector option
+        const modelSelectorOptions = document.querySelectorAll('[role="radio"]');
+        if (modelSelectorOptions.length > 0) {
+          modelSelectorOptions[0].focus();
+        }
+        e.preventDefault();
+      }
+    }
+    
+    // Left arrow key handling
+    if (e.key === 'ArrowLeft') {
+      const activeElement = document.activeElement;
+      
+      if (activeElement === sendButtonRef.current) {
+        voiceButtonRef.current?.focus();
+        e.preventDefault();
+      } else if (activeElement === voiceButtonRef.current) {
+        if (message) {
+          // Focus the last model selector option
+          const modelSelectorOptions = document.querySelectorAll('[role="radio"]');
+          if (modelSelectorOptions.length > 0) {
+            modelSelectorOptions[modelSelectorOptions.length - 1].focus();
+          }
+        } else {
+          textareaRef.current?.focus();
+        }
+        e.preventDefault();
+      } else if (activeElement.getAttribute('role') === 'radio') {
+        if (message) {
+          clearButtonRef.current?.focus();
+        }
+        e.preventDefault();
+      }
+    }
+    
+    // Enter key handling (submit form)
+    if (e.key === 'Enter') {
+      if (!e.shiftKey && document.activeElement !== textareaRef.current) {
+        if (message.trim() && !isLoading) {
+          e.preventDefault();
+          handleSubmit(e);
+        }
+      }
+    }
+  };
 
+  // Add keyboard event listeners
+  useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isListening]);
+  }, [isListening, message, isLoading]);  // Added isLoading dependency
 
   // Handle manual typing
   const handleInputChange = (e) => {
@@ -172,6 +241,7 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
           value={message}
           onChange={handleInputChange}
           disabled={isLoading}
+          aria-label="Message input"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -183,70 +253,73 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
         <div className="absolute bottom-3 right-3 flex space-x-2">
           <button
             type="button"
+            ref={voiceButtonRef}
             onClick={toggleListening}
             className={`p-2 rounded-lg ${
               isListening 
-                ? 'bg-red-500 text-white animate-pulse' 
+                ? 'bg-red-500 text-black animate-pulse' 
                 : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-            } transition-colors`}
+            } transition-colors focus:ring-2 focus:ring-primary focus:outline-none`}
             disabled={isLoading}
             title={isListening ? "Stop listening" : "Start voice input"}
+            aria-label={isListening ? "Stop voice input" : "Start voice input"}
+            aria-pressed={isListening}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
             </svg>
           </button>
 
           <button
-            type="submit"
-            className={`p-2 rounded-lg ${
-              isLoading || !message.trim() ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-primary text-white hover:bg-secondary'
-            } transition-colors`}
-            disabled={isLoading || !message.trim()}
-            title="Send message"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
+   type="submit"
+   ref={sendButtonRef}
+   className={`p-2 rounded-lg ${
+     isLoading || !message.trim() ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-primary text-white hover:bg-secondary'
+   } transition-colors focus:ring-2 focus:ring-[#20B2AA] focus:outline-none`}
+   disabled={isLoading || !message.trim()}
+   title="Send message"
+   aria-label="Send message"
+>
+   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{transform: 'rotate(45deg)'}}>
+       <path d="M22 2L11 13"></path>
+       <polygon points="22 2 2 9 11 13 15 22 22 2"></polygon>
+   </svg>
+</button>
         </div>
         
         <div className="absolute left-3 bottom-3 flex space-x-2">
           {message && (
             <button
               type="button"
+              ref={clearButtonRef}
               onClick={handleClear}
-              className="p-1 rounded-md bg-gray-200 text-gray-500 hover:bg-gray-300 hover:text-gray-700 transition-colors flex items-center"
+              className="p-1 rounded-md bg-gray-200 text-gray-500 hover:bg-gray-300 hover:text-gray-700 transition-colors flex items-center focus:ring-2 focus:ring-primary focus:outline-none"
               title="Clear message (ESC)"
+              aria-label="Clear message"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
               <span className="text-xs ml-1">Clear</span>
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={() => setIsReasonSelected(!isReasonSelected)}
-            className={`py-1 px-2 rounded-md transition-colors flex items-center text-xs font-medium ${
-              isReasonSelected 
-                ? 'bg-gradient-to-r from-blue-300 to-blue-400 text-white' 
-                : 'bg-gray-200 text-gray-500 hover:bg-gray-300 hover:text-gray-700'
-            }`}
-            title="Toggle detailed reasoning"
-          >
-            Detailed
-          </button>
+          <ModelSelector selectedModel={selectedModel} onSelectModel={setSelectedModel} />
         </div>
       </div>
       
       {isListening && (
-        <div className="mt-1 text-xs text-white flex items-center">
+        <div className="mt-1 text-xs text-black flex items-center" role="status" aria-live="assertive">
           <div className="w-2 h-2 rounded-full bg-red-500 mr-1 animate-pulse"></div>
           Listening... (speak clearly)
         </div>
       )}
+      
+      {/* Accessibility instructions */}
+      <div className="sr-only" aria-live="polite">
+        {isListening ? 'Voice input is active. Speak clearly.' : 'Voice input is off.'}
+        Use arrow keys to navigate between input field, model selection, and send button.
+      </div>
     </form>
   );
 };

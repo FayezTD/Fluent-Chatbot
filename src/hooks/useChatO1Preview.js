@@ -18,7 +18,7 @@ export const useChatO1Preview = () => {
     "How does the integration of Azure OpenAI with Logic Apps and Cosmos DB enhance the marketing capabilities of AB InRev?",
     "What are the key benefits of implementing AI-driven workplace solutions?",
   ];
-
+    
   const sendMessage = useCallback(async (content) => {
     if (!content.trim()) return;
 
