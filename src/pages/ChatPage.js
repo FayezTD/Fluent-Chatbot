@@ -10,8 +10,8 @@ import '../styles/chatBackground.css';
 // Starter questions with large 3D professional gradient icon components
 export const STARTER_QUESTIONS = [
   {
-    id: 'market-size',
-    title: 'Potential market size of AB InBev Operation',
+    id: 'change-management',
+    title: 'Change Management Approach',
     icon: (
       <svg className="w-16 h-16" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -40,11 +40,11 @@ export const STARTER_QUESTIONS = [
         </g>
       </svg>
     ),
-    question: 'How many countries does AB InBev operate in, and what is the potential market size for the ConnectAI solution in these regions?'
+    question: 'Can you outline the change management approach recommended for the organizational restructuring?'
   },
   {
-    id: 'cost-savings',
-    title: 'Annual cost savings for PepsiCo',
+    id: 'data-security',
+    title: 'Data Security Compliance',
     icon: (
       <svg className="w-16 h-16" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -73,11 +73,11 @@ export const STARTER_QUESTIONS = [
         </g>
       </svg>
     ),
-    question: 'What is the anticipated annual cost savings for PepsiCo by optimizing costs through shared resources and standardized practices with the PepGenX platform?'
+    question: 'How does the document address data security compliance requirements for cross-border operations?'
   },
   {
-    id: 'monthly-acr',
-    title: 'Monthly ACR for AI services at ABN AMRO',
+    id: 'customer-satisfaction',
+    title: 'Customer Satisfaction Metrics',
     icon: (
       <svg className="w-16 h-16" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -107,11 +107,11 @@ export const STARTER_QUESTIONS = [
         </g>
       </svg>
     ),
-    question: 'How much has the monthly ACR for AI services contributed to the overall operational efficiency of the ECM department at ABN AMRO?'
+    question: 'What metrics are being used to measure customer satisfaction in the new service model?'
   },
   {
     id: 'processing-time',
-    title: 'Complaints letter processing time',
+    title: 'Complaints Letter Processing Time',
     icon: (
       <svg className="w-16 h-16" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -180,8 +180,8 @@ export const STARTER_QUESTIONS = [
     question: 'How does the integration of Azure OpenAI with Logic Apps and Cosmos DB enhance the marketing capabilities of AB InBev?'
   },
   {
-    id: 'implementation-comparison',
-    title: 'PepsiCo vs Starbucks AIDW Implementation',
+    id: 'tech-solutions',
+    title: 'Finance Process Automation',
     icon: (
       <svg className="w-16 h-16" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -210,7 +210,7 @@ export const STARTER_QUESTIONS = [
         </g>
       </svg>
     ),
-    question: 'Please compare how PepsiCo and Starbucks use the AIDW to enhance their business in a tabular format'
+    question: 'What technology solutions were identified as critical for automating the manual processes in finance?'
   }
 ];
  

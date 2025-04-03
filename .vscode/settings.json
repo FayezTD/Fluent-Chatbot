@@ -1,0 +1,8 @@
+{
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/d569bac3-61bf-4195-97fe-c47e5737ad17/resourceGroups/rg-aidw/providers/Microsoft.Web/sites/wb-aidw-chatbot-01",
+    "appService.deploySubpath": "."
+}
