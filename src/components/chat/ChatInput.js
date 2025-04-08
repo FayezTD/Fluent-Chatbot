@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import ModelSelector from './ModelSelector';
 
 const ChatInput = ({ onSendMessage, isLoading }) => {
   const [message, setMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('GPT-4o');
   const textareaRef = useRef(null);
   const sendButtonRef = useRef(null);
   const voiceButtonRef = useRef(null);
   const clearButtonRef = useRef(null);
   const recognitionRef = useRef(null);
+
+  // Set Deep Search as the default model
+  const defaultModel = 'o1-Preview';
 
   // Adjust textarea height based on content
   useEffect(() => {
@@ -112,7 +113,8 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
 
   // Handle form submission
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    
     if (message.trim() && !isLoading) {
       // Stop listening if active
       if (isListening && recognitionRef.current) {
@@ -124,11 +126,16 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
         }
       }
       
-      // Include the selected model in the message metadata
-      onSendMessage(message, selectedModel);
+      // Always send with the default model
+      onSendMessage(message, defaultModel);
       
       // Clear the message
       setMessage('');
+      
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
     }
   };
 
@@ -166,18 +173,6 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
           voiceButtonRef.current?.focus();
         }
         e.preventDefault();
-      } else if (activeElement === voiceButtonRef.current) {
-        if (message.trim()) {
-          sendButtonRef.current?.focus();
-        }
-        e.preventDefault();
-      } else if (activeElement === clearButtonRef.current) {
-        // Focus the first model selector option
-        const modelSelectorOptions = document.querySelectorAll('[role="radio"]');
-        if (modelSelectorOptions.length > 0) {
-          modelSelectorOptions[0].focus();
-        }
-        e.preventDefault();
       }
     }
     
@@ -189,31 +184,16 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
         voiceButtonRef.current?.focus();
         e.preventDefault();
       } else if (activeElement === voiceButtonRef.current) {
-        if (message) {
-          // Focus the last model selector option
-          const modelSelectorOptions = document.querySelectorAll('[role="radio"]');
-          if (modelSelectorOptions.length > 0) {
-            modelSelectorOptions[modelSelectorOptions.length - 1].focus();
-          }
-        } else {
-          textareaRef.current?.focus();
-        }
-        e.preventDefault();
-      } else if (activeElement.getAttribute('role') === 'radio') {
-        if (message) {
-          clearButtonRef.current?.focus();
-        }
+        textareaRef.current?.focus();
         e.preventDefault();
       }
     }
     
-    // Enter key handling (submit form)
-    if (e.key === 'Enter') {
-      if (!e.shiftKey && document.activeElement !== textareaRef.current) {
-        if (message.trim() && !isLoading) {
-          e.preventDefault();
-          handleSubmit(e);
-        }
+    // Handle Enter key for submit only when not in textarea with shift key
+    if (e.key === 'Enter' && document.activeElement !== textareaRef.current) {
+      if (message.trim() && !isLoading) {
+        e.preventDefault();
+        handleSubmit();
       }
     }
   };
@@ -225,11 +205,21 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isListening, message, isLoading]);  // Added isLoading dependency
+  }, [isListening, message, isLoading]);
 
   // Handle manual typing
   const handleInputChange = (e) => {
     setMessage(e.target.value);
+  };
+
+  // Separate handler for textarea Enter key
+  const handleTextareaKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (message.trim() && !isLoading) {
+        handleSubmit();
+      }
+    }
   };
 
   return (
@@ -243,12 +233,7 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
           onChange={handleInputChange}
           disabled={isLoading}
           aria-label="Message input"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit(e);
-            }
-          }}
+          onKeyDown={handleTextareaKeyDown}
         />
 
         <div className="absolute bottom-3 right-3 flex space-x-2">
@@ -272,20 +257,21 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
           </button>
 
           <button
-   type="submit"
-   ref={sendButtonRef}
-   className={`p-2 rounded-lg ${
-     isLoading || !message.trim() ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-primary text-white hover:bg-secondary'
-   } transition-colors focus:ring-2 focus:ring-[#20B2AA] focus:outline-none`}
-   disabled={isLoading || !message.trim()}
-   title="Send message"
-   aria-label="Send message"
->
-   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{transform: 'rotate(45deg)'}}>
-       <path d="M22 2L11 13"></path>
-       <polygon points="22 2 2 9 11 13 15 22 22 2"></polygon>
-   </svg>
-</button>
+            type="button"
+            ref={sendButtonRef}
+            onClick={handleSubmit}
+            className={`p-2 rounded-lg ${
+              isLoading || !message.trim() ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-primary text-white hover:bg-secondary'
+            } transition-colors focus:ring-2 focus:ring-[#20B2AA] focus:outline-none`}
+            disabled={isLoading || !message.trim()}
+            title="Send message"
+            aria-label="Send message"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{transform: 'rotate(45deg)'}}>
+                <path d="M22 2L11 13"></path>
+                <polygon points="22 2 2 9 11 13 15 22 22 2"></polygon>
+            </svg>
+          </button>
         </div>
         
         <div className="absolute left-3 bottom-3 flex space-x-2">
@@ -294,7 +280,7 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
               type="button"
               ref={clearButtonRef}
               onClick={handleClear}
-              className="p-1 rounded-md bg-gray-200 text-gray-500 hover:bg-gray-300 hover:text-gray-700 transition-colors flex items-center focus:ring-2 focus:ring-primary focus:outline-none"
+              className="p-1 rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors flex items-center justify-center focus:ring-2 focus:ring-primary focus:outline-none shadow-sm"
               title="Clear message (ESC)"
               aria-label="Clear message"
             >
@@ -305,7 +291,12 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
             </button>
           )}
 
-          <ModelSelector selectedModel={selectedModel} onSelectModel={setSelectedModel} />
+          {/* Fixed Deep Search indicator */}
+          <div className="flex items-center">
+            <div className="bg-gradient-to-r from-cyan-700 to-cyan-500 text-white py-1 px-3 rounded-full text-xs font-medium shadow-sm">
+              Deep Search
+            </div>
+          </div>
         </div>
       </div>
       
@@ -319,7 +310,7 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
       {/* Accessibility instructions */}
       <div className="sr-only" aria-live="polite">
         {isListening ? 'Voice input is active. Speak clearly.' : 'Voice input is off.'}
-        Use arrow keys to navigate between input field, model selection, and send button.
+        Use arrow keys to navigate between input field and send button.
       </div>
     </form>
   );
