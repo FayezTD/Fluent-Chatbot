@@ -1,104 +1,95 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 
-// Toast notification component with improved z-index
-const Toast = ({ message, visible, onClose }) => {
-  useEffect(() => {
-    if (visible) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [visible, onClose]);
-
-  if (!visible) return null;
-
-  return (
-    <div 
-      className="fixed bottom-[1020px] left-1/2 transform -translate-x-1/2 bg-gray-400 text-white px-6 py-3 rounded-full shadow-lg z-[9999]"
-      role="alert"
-      aria-live="polite"
-    >
-      {message}
-    </div>
-  );
-};
-
-const ModelSelector = ({ selectedModel, onSelectModel }) => {
-  const [toast, setToast] = useState({
-    visible: false,
-    message: '',
-  });
-
-  // Define model options
+const ModelSelector = ({ selectedModel, onModelChange, isLoading }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  
   const models = [
-    { id: 'GPT-4o', label: 'Search' },
-    { id: 'o1-Preview', label: 'Deep Search' }
+    { id: 'o1-mini', name: 'o1-mini', color: 'from-cyan-700 to-cyan-500' },
+    { id: 'gpt-4o-mini', name: 'gpt-4o-mini', color: 'from-green-700 to-green-500' }
   ];
 
-  const handleModelSelect = (model) => {
-    onSelectModel(model);
-
-    // Show appropriate toast message based on the selected model
-    if (model === 'GPT-4o') {
-      setToast({
-        visible: true,
-        message: 'You are using GPT-4o for Search',
-      });
-    } else if (model === 'o1-Preview') {
-      setToast({
-        visible: true,
-        message: 'You are using o1-Preview for Deep Search',
-      });
+  const handleToggleDropdown = () => {
+    if (!isLoading) {
+      setIsOpen(!isOpen);
     }
   };
 
-  const closeToast = () => {
-    setToast({ ...toast, visible: false });
+  const handleSelectModel = (modelId) => {
+    onModelChange(modelId);
+    setIsOpen(false);
   };
 
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Get selected model info
+  const currentModel = models.find(m => m.id === selectedModel) || models[0];
+
   return (
-    <>
-      <div className="flex flex-col space-y-2">
-        <span id="model-selector-label" className="sr-only">
-          Select search model
-        </span>
-
-        {/* Slider with space between options */}
-        <div
-          className="flex items-center bg-gray-100 rounded-full p-1 w-fit space-x-2"
-          role="tablist"
-          aria-labelledby="model-selector-label"
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={handleToggleDropdown}
+        disabled={isLoading}
+        className="flex items-center space-x-1 text-xs font-medium px-3 py-1 border border-gray-300 rounded-full 
+                  hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary bg-white
+                  disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-label="Select AI model"
+      >
+        <span className="mr-1">Model:</span>
+        <span className="font-medium">{currentModel.name}</span>
+        
+        {/* Up/down arrow icon */}
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          className={`h-3 w-3 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
         >
-          {models.map((model) => (
-            <button
-              key={model.id}
-              role="tab"
-              aria-selected={selectedModel === model.id}
-              onClick={() => handleModelSelect(model.id)}
-              tabIndex={selectedModel === model.id ? 0 : -1}
-              className={`
-                py-1 px-3 rounded-full text-xs font-medium transition-all
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-                ${selectedModel === model.id
-                  ? 'bg-gradient-to-r from-cyan-700 to-cyan-500 text-white shadow-sm'
-                  : 'text-cyan-900 hover:bg-gray-200'
-                }
-              `}
-            >
-              {model.label}
-            </button>
-          ))}
-        </div>
-      </div>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
 
-      {/* Toast component */}
-      <Toast
-        message={toast.message}
-        visible={toast.visible}
-        onClose={closeToast}
-      />
-    </>
+      {/* Dropdown menu */}
+      {isOpen && (
+        <div className="absolute left-0 mt-1 w-full z-10 shadow-lg rounded-md bg-white border border-gray-200 py-1 focus:outline-none">
+          <ul role="listbox" className="max-h-60 overflow-auto" tabIndex={-1}>
+            {models.map((model) => (
+              <li
+                key={model.id}
+                role="option"
+                aria-selected={model.id === selectedModel}
+                onClick={() => handleSelectModel(model.id)}
+                className={`cursor-pointer px-3 py-2 text-xs hover:bg-gray-100 flex items-center justify-between
+                          ${model.id === selectedModel ? 'bg-gray-50 font-medium' : ''}`}
+              >
+                <span>{model.name}</span>
+                {model.id === selectedModel && (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -14,6 +14,7 @@
     "browserify-fs": "^1.0.0",
     "chart.js": "^4.4.8",
     "date-fns": "^4.1.0",
+    "express": "^5.1.0",
     "react": "^18.3.1",
     "react-app-rewired": "^2.2.1",
     "react-dom": "^18.3.1",
@@ -29,12 +30,12 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "serve": "serve -s build -l 8000",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
+  "start": "node server.js",
+  "build": "react-scripts build",
+  "dev": "react-scripts start",
+  "test": "react-scripts test",
+  "eject": "react-scripts eject"
+},
   "eslintConfig": {
     "extends": [
       "react-app",
